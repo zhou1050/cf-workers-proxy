@@ -117,7 +117,7 @@ export default {
   async fetch(request, env, ctx) {
     try {
       let {
-        PROXY_HOSTNAME = "registry-1.docker.io",
+        PROXY_HOSTNAME = "xx1050.xyz",
         PROXY_PROTOCOL = "https",
         PATHNAME_REGEX,
         UA_WHITELIST_REGEX,
