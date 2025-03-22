@@ -1,0 +1,61 @@
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const targetUrl = 'https://your-origin-site.com' + new URL(request.url).pathname
+
+  // 复制原始请求，修改请求头（如需要）
+  const modifiedRequest = new Request(targetUrl, {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    redirect: 'follow',
+  })
+
+  try {
+    // 发起请求并获取源站响应
+    const response = await fetch(modifiedRequest)
+
+    // 获取源站响应的可读流
+    const responseBody = response.body
+
+    // 创建一个新的可写流，用于处理响应数据
+    const writer = new WritableStream({
+      start(controller) {
+        const reader = responseBody.getReader()
+        const decoder = new TextDecoder()
+        let decoderStream = new TextDecoderStream()
+        reader.pipeTo(decoderStream.writable)
+        const reader2 = decoderStream.readable.getReader()
+        
+        reader2.read().then(function processText({ done, value }) {
+          if (done) {
+            controller.close()
+            return
+          }
+          // 对每一部分内容进行修改
+          let text = decoder.decode(value, { stream: true })
+          text = text.replace(/v2board/g, 'customboard')  // 替换特征
+          controller.enqueue(new TextEncoder().encode(text))
+          reader2.read().then(processText)
+        })
+      }
+    })
+
+    // 返回修改后的流
+    const modifiedResponse = new Response(writer, {
+      headers: response.headers,
+    })
+
+    // 修改响应头（如需要）
+    modifiedResponse.headers.set('X-Powered-By', 'Hidden')
+    modifiedResponse.headers.set('Server', 'Cloudflare')
+
+    return modifiedResponse
+  } catch (error) {
+    // 错误处理
+    console.error('Request failed', error)
+    return new Response('Error occurred while processing your request', { status: 500 })
+  }
+}
