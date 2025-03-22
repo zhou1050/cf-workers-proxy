@@ -3,7 +3,7 @@ addEventListener('fetch', event => {
 })
 
 async function handleRequest(request) {
-  const targetUrl = 'https://your-origin-site.com' + new URL(request.url).pathname
+  const targetUrl = 'https://xx1050.xyz' + new URL(request.url).pathname
 
   // 复制原始请求，修改请求头（如需要）
   const modifiedRequest = new Request(targetUrl, {
